@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import { initDB } from "./src/config/database.js";
 
+// Importación de las rutas
 import authRoutes from "./src/routes/auth.routes.js";
 import userRoutes from "./src/routes/users.routes.js";
 import articleRoutes from "./src/routes/articles.routes.js";
@@ -14,6 +15,7 @@ dotenv.config();
 
 const app = express();
 
+// Middleware
 app.use(cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:3001',
     credentials: true
@@ -21,6 +23,7 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+// Rutas
 app.use("/api", authRoutes);
 app.use("/api", userRoutes);
 app.use("/api", articleRoutes);
@@ -34,6 +37,7 @@ app.get("/api/health", (req, res) => {
     });
 });
 
+// Manejo de los errores
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({
@@ -42,6 +46,7 @@ app.use((err, req, res, next) => {
     });
 });
 
+// Manejo de rutas no encontradas
 app.use((req, res) => {
     res.status(404).json({
         message: "Ruta no encontrada",
