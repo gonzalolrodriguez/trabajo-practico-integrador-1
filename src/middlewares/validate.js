@@ -1,5 +1,8 @@
 import { validationResult } from "express-validator";
 
+
+
+
 export const validate = (req, res, next) => {
     const errors = validationResult(req);
 
@@ -18,6 +21,8 @@ export const validate = (req, res, next) => {
     next();
 };
 
+// Middleware para validar IDs en parámetros
+
 export const validateId = (req, res, next) => {
     const { id } = req.params;
 
@@ -31,6 +36,8 @@ export const validateId = (req, res, next) => {
     req.params.id = parseInt(id);
     next();
 };
+
+// Middleware para validar que un recurso existe
 
 export const validateResourceExists = (model) => {
     return async (req, res, next) => {
@@ -54,6 +61,8 @@ export const validateResourceExists = (model) => {
         }
     };
 };
+
+// Middleware para validar unicidad de campos
 
 export const validateUniqueField = (model, field, message) => {
     return async (req, res, next) => {
