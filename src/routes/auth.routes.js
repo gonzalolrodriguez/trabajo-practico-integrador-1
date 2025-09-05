@@ -119,8 +119,68 @@ const logout = (req, res) => {
 };
 
 // Rutas de autenticación
+
+import { authMiddleware } from '../middlewares/auth.js';
+
 router.post("/auth/register", register);
 router.post("/auth/login", login);
 router.post("/auth/logout", logout);
+
+// obtener perfil del usuario autenticado
+router.get("/auth/profile", authMiddleware, async (req, res) => {
+    try {
+
+        const profile = await Profile.findOne({ where: { user_id: req.user.id } });
+        if (!profile) {
+            return res.status(404).json({ message: "Perfil no encontrado" });
+        }
+        return res.status(200).json({
+            user: {
+                id: req.user.id,
+                username: req.user.username,
+                email: req.user.email,
+                role: req.user.role
+            },
+            profile
+        });
+
+    } catch (error) {
+        return res.status(500).json({ message: "Error al obtener perfil", error: error.message });
+    }
+});
+
+// Actualizar perfil del usuario autenticado
+import { body } from 'express-validator';
+router.put(
+    "/auth/profile",
+    authMiddleware,
+    [
+        body("first_name").optional().isLength({ min: 2, max: 50 }).withMessage("El nombre debe tener entre 2 y 50 caracteres").isAlpha().withMessage("El nombre solo puede contener letras"),
+        body("last_name").optional().isLength({ min: 2, max: 50 }).withMessage("El apellido debe tener entre 2 y 50 caracteres").isAlpha().withMessage("El apellido solo puede contener letras"),
+        body("biography").optional().isLength({ max: 500 }).withMessage("La biografía no puede exceder los 500 caracteres"),
+        body("avatar_url").optional().isURL().withMessage("El avatar debe ser una URL válida"),
+        body("birth_date").optional().isISO8601().withMessage("La fecha de nacimiento debe ser válida")
+    ],
+    async (req, res) => {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({
+                    message: "Errores de validación",
+                    errors: errors.array()
+                });
+            }
+            const profile = await Profile.findOne({ where: { user_id: req.user.id } });
+            if (!profile) {
+                return res.status(404).json({ message: "Perfil no encontrado" });
+            }
+            const { first_name, last_name, biography, avatar_url, birth_date } = req.body;
+            await profile.update({ first_name, last_name, biography, avatar_url, birth_date });
+            return res.status(200).json({ message: "Perfil actualizado exitosamente", profile });
+        } catch (error) {
+            return res.status(500).json({ message: "Error al actualizar perfil", error: error.message });
+        }
+    }
+);
 
 export default router;
